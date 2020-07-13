@@ -7,18 +7,70 @@ android {
     buildToolsVersion rootProject.ext.android.buildToolsVersion
 
     defaultConfig {
-        applicationId "org.boo.emptybase"
+        applicationId ""
+
         minSdkVersion rootProject.ext.android.minSdkVersion
         targetSdkVersion rootProject.ext.android.targetSdkVersion
         versionCode rootProject.ext.android.versionCode
         versionName rootProject.ext.android.versionName
+
         manifestPlaceholders = rootProject.ext.manifestPlaceholders
     }
-
+    signingConfigs {
+        release {
+            keyAlias 'empty.jks'
+            keyPassword 'empty.jks'
+            storeFile file('../empty.jks')
+            storePassword 'empty.jks'
+        }
+    }
     buildTypes {
         release {
             minifyEnabled false
+
+        }
+        release {
+            debuggable false
+            zipAlignEnabled true  //压缩优化
+            shrinkResources true  //移出无用资源
+            minifyEnabled true   //开启混淆
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
+            buildConfigField 'String', 'TEST_KEY', '"11111"'
+        }
+        debug {
+            debuggable true
+            zipAlignEnabled false  //压缩优化
+            shrinkResources false  //移出无用资源
+            minifyEnabled false   //开启混淆
+            buildConfigField 'String', 'TEST_KEY', '"1111"'
+        }
+    }
+    flavorDimensions 'channel'
+    productFlavors.all {
+        ext.apkName = null
+    }
+    productFlavors {
+        // 测试
+        yl_test {
+            dimension 'channel'
+            applicationId "org.boo.emptybase"
+            resValue "string", "app_name", "测试渠道包"
+            manifestPlaceholders.serverHost = "http://www.google.com/"
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+android.applicationVariants.all { variant ->
+    variant.outputs.all { output ->
+        if (variant.buildType.name == 'release') {
+            def appName = variant.mergedFlavor.resValues.get('app_name').getValue()
+            def formattedDate = new Date().format('yyyyMMdd')
+            outputFileName = "${appName}-${formattedDate}.apk"
         }
     }
 }
